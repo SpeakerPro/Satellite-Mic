@@ -16,7 +16,7 @@ __attribute__((aligned(4))) static uint8_t aprom_buf[FMC_FLASH_PAGE_SIZE];
 uint32_t bUpdateApromCmd;
 uint32_t g_apromSize, g_dataFlashAddr, g_dataFlashSize;
 
-extern int32_t isp_connect;
+//extern int32_t isp_connect;
 
 static uint16_t Checksum(unsigned char *buf, int len)
 {
@@ -121,16 +121,17 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
     else if (lcmd == CMD_CONNECT)
     {
         g_packno = 1;
-				isp_connect = 1;
+				//isp_connect = 1;
         goto out;
     }
     else if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_ERASE_ALL))
     {
-        EraseAP(FMC_APROM_BASE, (g_apromSize < g_dataFlashAddr) ? g_apromSize : g_dataFlashAddr); // erase APROM // g_dataFlashAddr, g_apromSize
+//        EraseAP(FMC_APROM_BASE, (g_apromSize < g_dataFlashAddr) ? g_apromSize : g_dataFlashAddr); // erase APROM // g_dataFlashAddr, g_apromSize
+        EraseAP(FMC_APROM_BASE, g_apromSize);    // Erase whole APROM
 
         if (lcmd == CMD_ERASE_ALL)   //erase data flash
         {
-            EraseAP(g_dataFlashAddr, g_dataFlashSize);
+//            EraseAP(g_dataFlashAddr, g_dataFlashSize);
             *(uint32_t *)(response + 8) = regcnf0 | 0x02;
             UpdateConfig((uint32_t *)(response + 8), NULL);
         }
@@ -143,23 +144,23 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         outpw(response + 8, (FMC->ISPCTL & 0x2) ? 2 : 1);
     }
 
+//    if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_UPDATE_DATAFLASH))
     if (lcmd == CMD_UPDATE_APROM)
-    //if ((lcmd == CMD_UPDATE_APROM) || (lcmd == CMD_UPDATE_DATAFLASH))
     {
-        if (lcmd == CMD_UPDATE_DATAFLASH)
-        {
-            StartAddress = g_dataFlashAddr;
+//        if (lcmd == CMD_UPDATE_DATAFLASH)
+//        {
+//            StartAddress = g_dataFlashAddr;
 
-            if (g_dataFlashSize)   //g_dataFlashAddr
-            {
-                EraseAP(g_dataFlashAddr, g_dataFlashSize);
-            }
-            else
-            {
-                goto out;
-            }
-        }
-        else
+//            if (g_dataFlashSize)   //g_dataFlashAddr
+//            {
+//                EraseAP(g_dataFlashAddr, g_dataFlashSize);
+//            }
+//            else
+//            {
+//                goto out;
+//            }
+//        }
+//        else
         {
             StartAddress = 0;
         }
@@ -171,17 +172,17 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         StartAddress_bak = StartAddress;
         TotalLen_bak = TotalLen;
     }
-    else if (lcmd == CMD_UPDATE_CONFIG)
-    {
-        if ((security == 0) && (!bUpdateApromCmd))   //security lock
-        {
-            goto out;
-        }
+//    else if (lcmd == CMD_UPDATE_CONFIG)
+//    {
+//        if ((security == 0) && (!bUpdateApromCmd))   //security lock
+//        {
+//            goto out;
+//        }
 
-        UpdateConfig((uint32_t *)(pSrc), (uint32_t *)(response + 8));
-        GetDataFlashInfo(&g_dataFlashAddr, &g_dataFlashSize);
-        goto out;
-    }
+//        UpdateConfig((uint32_t *)(pSrc), (uint32_t *)(response + 8));
+//        GetDataFlashInfo(&g_dataFlashAddr, &g_dataFlashSize);
+//        goto out;
+//    }
     else if (lcmd == CMD_RESEND_PACKET)     //for APROM&Data flash only
     {
         uint32_t PageAddress;
@@ -206,8 +207,8 @@ int ParseCmd(unsigned char *buffer, uint8_t len)
         goto out;
     }
 
+//    if ((gcmd == CMD_UPDATE_APROM) || (gcmd == CMD_UPDATE_DATAFLASH))
     if (gcmd == CMD_UPDATE_APROM)
-    //if ((gcmd == CMD_UPDATE_APROM) || (gcmd == CMD_UPDATE_DATAFLASH))
     {
         if (TotalLen < srclen)
         {

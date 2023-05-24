@@ -10,11 +10,6 @@
 #include "NuMicro.h"
 #include "hid_transfer.h"
 
-#undef USBD_VID
-#define USBD_VID        0x17EF
-#undef USBD_PID
-#define USBD_PID        0xA074
-
 /*!<USB HID Report Descriptor */
 uint8_t HID_DeviceReportDescriptor[] =
 {
@@ -57,8 +52,8 @@ uint8_t gu8DeviceDescriptor[] =
     USBD_PID & 0x00FF,
     ((USBD_PID & 0xFF00) >> 8),
     0x00, 0x00,     /* bcdDevice */
-    0x01,           /* iManufacture */
-    0x02,           /* iProduct */
+    0x00,           /* iManufacture */
+    0x00,           /* iProduct */
     0x00,           /* iSerialNumber - no serial */
     0x01            /* bNumConfigurations */
 };
@@ -164,8 +159,8 @@ uint8_t gu8BOSDescriptor[] =
 uint8_t *gpu8UsbString[4] =
 {
     gu8StringLang,
-    gu8VendorStringDesc,
-    gu8ProductStringDesc,
+//    gu8VendorStringDesc,
+//    gu8ProductStringDesc,
     NULL,
 };
 

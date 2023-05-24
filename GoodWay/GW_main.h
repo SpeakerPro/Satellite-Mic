@@ -12,7 +12,7 @@
 #define use_middle_pair
 
 #define VERSION_MAJOR_ID              0x00
-#define VERSION_MINOR_ID              0x79
+#define VERSION_MINOR_ID              0x80
 
 // USB definition
 #define WIRE_USBD_PID                 0xA064
@@ -340,6 +340,8 @@ extern uint8_t wire_seq_num;
 extern uint32_t unpair_wait_count;
 extern uint8_t exec_unpair_action;
 
+extern uint32_t  loaderImage1Base, loaderImage1Limit;
+
 #define TIMER0_FREQ                                     1000
 
 #define DOA_LED_total                                   8
@@ -351,7 +353,7 @@ extern uint8_t exec_unpair_action;
 #define STATE_MACHINE_TEST
 //#define TEST_ENABLE
 
-//#define IGNORE_PRINTF
+#define IGNORE_PRINTF
 
 #define LOG_GPIO_INDEX                                  1
 #define TIME_S_TO_MS(x)                                 (x*1000)

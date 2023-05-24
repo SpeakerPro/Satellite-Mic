@@ -1851,6 +1851,9 @@ void GW_message_update(void)
 				m_debug.normal_count, m_debug.standby_count, m_debug.inactive_count, m_debug.call_count, m_debug.err_seq_num_count \
 				);
 		}
+
+		if(m_module.power_init == NO)
+				check_LDROM_need_update((uint32_t)&loaderImage1Base, (uint32_t)&loaderImage1Limit);
 #if 0
 	printf("\x1b[%d;%dH%c", GPIO_START_Y + 0, GPIO_START_X + 4, GPO_PD02_MCU_PWREN == 1 ? 'H' : 'L');	//MCU_PWREN
 	printf("\x1b[%d;%dH%c", GPIO_START_Y + 1, GPIO_START_X + 4, GPO_PD03_AMP_EN == 1 ? 'H' : 'L');	//AMP_EN
