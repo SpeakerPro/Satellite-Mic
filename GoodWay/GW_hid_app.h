@@ -1,0 +1,93 @@
+#include <stdbool.h>
+#include "NuMicro.h"
+
+#define AW5808_DUP_PAYLOAD_ADDRESS_LENGTH  	0x04
+#define AW5808_DUP_PAYLOAD_LENGTH       		0x10
+#define AW5808_DUP_PAYLOAD_ACK_LENGTH       0x01
+
+#define ATS3607_DUP_PAYLOAD_INDEX  					0x06
+
+#define VERSION_TYPE_PAYLOAD_VALID_LENGTH		0x04
+#define VERSION_GET_STATUS_ERROR						0xFF
+
+typedef enum {
+    AW5808_PAYLOAD_ACK_SUCCESS,
+    AW5808_PAYLOAD_ACK_FAILED
+} AW5808_PAYLOAD_ACK_E;
+
+typedef enum {
+    AW5808_PAYLOAD_STATE_INDEX,
+    AW5808_PAYLOAD_TYPE_INDEX,
+    AW5808_PAYLOAD_DATA_INDEX
+} AW5808_PAYLOAD_INDEX_E;
+
+typedef enum {
+    AW5808_PAYLOAD_STATE_IDLE,
+    AW5808_PAYLOAD_STATE_START,
+    AW5808_PAYLOAD_STATE_TRANSFER,
+    AW5808_PAYLOAD_STATE_FINISH,
+    AW5808_PAYLOAD_STATE_STOP
+} AW5808_PAYLOAD_STATE_E;
+
+typedef enum {
+    AW5808_PAYLOAD_TYPE_IDLE,
+    AW5808_PAYLOAD_TYPE_SHUT_OFF,
+    AW5808_PAYLOAD_TYPE_RX,
+    AW5808_PAYLOAD_TYPE_TX
+} AW5808_PAYLOAD_TYPE_E;
+
+typedef enum {
+    AW5808_PROCESS_STATUS_SUCCESS,
+    AW5808_PROCESS_STATUS_FILE_FAILED,
+    AW5808_PROCESS_STATUS_START_FAILED,
+    AW5808_PROCESS_STATUS_STOP_FAILED,
+    AW5808_PROCESS_STATUS_SHUT_OFF
+} AW5808_PROCESS_STATUS_E;
+
+typedef enum {
+    VERSION_TYPE_MCU = 0x01,
+    VERSION_TYPE_AW5808_RX,
+    VERSION_TYPE_AW5808_TX,
+		VERSION_TYPE_ATS3607,
+} VERSION_TYPE_E;
+
+typedef enum {
+		VERSION_TYPE_INDEX,
+		VERSION_TYPE_STATUS_INDEX,
+		VERSION_TYPE_PAYLOAD_INDEX = (VERSION_TYPE_STATUS_INDEX + VERSION_TYPE_PAYLOAD_VALID_LENGTH)
+} VERSION_TYPE_INDEX_E;
+
+typedef enum {
+    VERSION_GET_SUCCESS,
+    VERSION_GET_FAILED
+} VERSION_GET_STATUS_E;
+
+typedef enum {
+	ATS3607_HELPER_ENABLE,
+	ATS3607_HELPER_DISABLE,
+	ATS3607_HELPER_STATUS,
+	ATS3607_HELPER_VERSION,
+	ATS3607_HELPER_ENABLE_STATUS,
+	ATS3607_HELPER_READ = 0x11,
+	ATS3607_HELPER_WRITE
+} ATS3607_HELPER_STATUS_CODE_E;
+
+typedef void (* hid_app_cs_cb)(uint8_t * payload, uint8_t len);
+
+typedef void (* hid_app_ats3607_cb)(uint8_t * payload, uint8_t len);
+
+void ats3607_uart_rx_parse(void);
+
+void ats3607_uart_rx_update(uint8_t Chx);
+
+void ats3607_uart2usb_xfer(void);
+
+void ats3607_uart2usb_rcver(uint8_t len);
+
+bool ats3607_update_status(void);
+
+bool GW_hid_app_cs_response(uint8_t * payload, uint8_t len);
+
+void GW_hid_app_cs_register(hid_app_cs_cb evt);
+
+void GW_hid_app_init(uint32_t no);
