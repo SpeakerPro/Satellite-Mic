@@ -693,7 +693,7 @@ void evt_rom_mode_cb(DEV_CMD_S * p_msg_out, DEV_CMD_S * msg_in)
 
 		bool ldrom = msg_in->sub_cmd_t.payload[0]? false: true;
 		if(ldrom != NO)
-				sys_evt.fw_upgrade_mcu(NULL);
+				sys_evt.fw_upgrade_mcu(ldrom);
 		p_msg_out->sub_cmd_t.cmd = GW_HID_CMD_ROM_MODE;
 		p_msg_out->sub_cmd_t.len = 0x01;
 		p_msg_out->sub_cmd_t.payload[0] = rom_boot_set(ldrom)? 0x00: 0x01;

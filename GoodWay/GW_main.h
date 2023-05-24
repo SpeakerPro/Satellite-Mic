@@ -12,7 +12,7 @@
 #define use_middle_pair
 
 #define VERSION_MAJOR_ID              0x00
-#define VERSION_MINOR_ID              0x77
+#define VERSION_MINOR_ID              0x79
 
 // USB definition
 #define WIRE_USBD_PID                 0xA064
@@ -367,6 +367,7 @@ extern uint8_t exec_unpair_action;
 #define POWER_UP_RELEASE_TIME_MS                        50
 #define POWER_DOWN_RELEASE_HOLD_TIME_MS                 500
 #define POWER_DOWN_PRESS_HOLD_TIME_S                    3
+#define POWER_DOWN_PRESS_HOLD_RESERVE_TIME_MS           500
 #define POWER_DOWN_USB_HOLD_TIME_S                      1
 #define POWER_DOWN_USB_HOLD_TIME_MS                     10
 #define POWER_DOWN_WAIT_TIME_S                          5
@@ -473,7 +474,6 @@ typedef enum {
 		LED_POWER_LOW_BLINKY,
 		LED_CONNECTED_SUCCESS_PEND,
 		LED_PAIR_FAIL_BLINKY,
-		LED_UNPAIRING_CONSTANT,
 		LED_STANDBY_AWAKE,
 		LED_STATE_COUNT,
 } LED_STATE_MACHINE_E;
@@ -605,6 +605,7 @@ typedef enum {
 		STATE_FIRMWARE_UPGRADE_ATS3607_START,
 		STATE_FIRMWARE_UPGRADE_ATS367_STOP,              //0x30
 		STATE_FIRMWARE_UPGRADE_MCU_START,
+		STATE_FIRMWARE_UPGRADE_MCU_STOP,
 } SYSTEM_STSTE_MACHINE_E;
 
 typedef enum {
@@ -729,12 +730,13 @@ typedef struct {
 		uint8_t   power_down:                 2;
 		uint8_t   fw_upgrade_aw5808:          1;
 		uint8_t   fw_upgrade_ats3607:         1;
+		uint8_t   fw_upgrade_mcu:             1;
 		uint8_t   attention:                  1;
 		uint8_t   charge_status:              2;
 		uint8_t   vdm_ready:                  1;
 		uint8_t   led_lock:                   1;
 		uint8_t   led_lock_long:              1;
-		uint8_t   rsv:                        2;     // 40-bits
+		uint8_t   rsv:                        1;     // 40-bits
 		uint8_t   who;
 		buffer_s  rx;
 		buffer_s  tx;

@@ -144,7 +144,7 @@ void send_atten_req(void);
 void GW_usb_adc_init(void);
 void GW_usb_adc_uninit(void);
 uint8_t GW_check_DFP_level(uint8_t connect);
-uint8_t GW_5G_CCH_init_check(uint8_t status);
+uint8_t GW_host_check(uint8_t status);
 void GW_5G_CCH_pop_all(void);
 void GW_5G_CCH_push(uint8_t type);
 void GW_system_event_init(void);
@@ -198,6 +198,11 @@ void system_standby_restart(void)
 {
 		m_module.standby_timeout_ms = 0;
 		m_module.standby_timeout_s = 0;
+}
+
+void system_unpair_restart(void)
+{
+		m_cch_rx.pair.pairing_timeout_ticks_ms = 0;
 }
 
 void power_down_debug_uart2(void)
@@ -652,12 +657,6 @@ void GW_led_state_machine(void)
 								system_state_update(STATE_PAIR_FAIL_E);
 						}
 						break;
-				case LED_UNPAIRING_CONSTANT:
-						if(m_led.state_cycle[0] >= POWER_UNPAIR_TIME_S) {       // Blinky three times to enter unpaired
-								led_state_pop(LED_UNPAIRING_CONSTANT);
-								system_state_update(STATE_UNPAIRED);
-						}
-						break;
 				case LED_STANDBY_AWAKE:
 						if(m_led.state_cycle[0] >= POWER_STANDBY_AWAKE_TIME_S) {       // Blinky three times to enter paired-idle
 								led_state_pop(LED_STANDBY_AWAKE);
@@ -696,6 +695,7 @@ void system_state_update(uint8_t state)
 						m_module.first_boot = YES;//m_module.wired_pair? NO: YES;
 						//m_module.off_range = m_module.wired_pair? NO: YES;
 						m_module.power_init = NO;
+						GW_host_check(NULL);
 						break;
 				case STATE_POWER_OFF_S:
 						m_module.power_init = YES;
@@ -750,20 +750,21 @@ void system_state_update(uint8_t state)
 				//wait for the DSP play tone is done
 				case STATE_PAIR_FAIL_E:
 						m_module.pair_fail_power_down = YES;
-						led_state_push(LED_UNPAIRING_CONSTANT);
-						break;
-				case STATE_UNPAIRED:
 						if(m_module.fw_upgrade_ats3607 == NO && m_module.fw_upgrade_aw5808 == NO)
 								m_module.power_down = POWER_DOWN_READY;
 						break;
 				case STATE_USB_CONNECTED:
-						if(m_module.usb_connected == NO)
+						if(m_module.usb_connected == NO) {
 								system_standby_restart();
+								system_unpair_restart();
+						}
 						m_module.usb_connected = YES;
 						break;
 				case STATE_USB_DISCONNECT:
-						if(m_module.usb_connected == YES)
+						if(m_module.usb_connected == YES) {
 								system_standby_restart();
+								system_unpair_restart();
+						}
 						m_module.usb_connected = NO;
 						break;
 				case STATE_BATTERY_CHARGING:
@@ -822,29 +823,29 @@ void system_state_update(uint8_t state)
 						m_module.low_power = NO;
 						break;
 				case STATE_CONNECTED_DEVICE_TYPE:
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_DEVICE_TYPE_SYNC_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_DEVICE_TYPE_SYNC_TYPE_BIT_FIELD);
 						break;
 				case STATE_CONNECTED_SYSTEM_NORMAL:
 						if(m_module.system_state == SYSTEM_STATE_IN_CALL)
 								system_standby_restart();
 						m_module.system_state = SYSTEM_STATE_NORMAL;
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
 						break;
 				case STATE_CONNECTED_SYSTEM_STANDBY:
 						m_module.system_state = SYSTEM_STATE_STANDBY;
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
 						break;
 				case STATE_CONNECTED_SYSTEM_INACTIVE:
 						if(m_module.system_state != SYSTEM_STATE_INACTIVE)
 								m_debug.inactive_count_test++;
 						m_module.system_state = SYSTEM_STATE_INACTIVE;
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
 						break;
 				case STATE_CONNECTED_SYSTEM_IN_CALL:
 						m_module.standby = STATE_STANDBY_IDLE;
 						m_module.system_state = SYSTEM_STATE_IN_CALL;
 						system_standby_restart();
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_SYSTEM_COMMAND_TYPE_BIT_FIELD);
 						break;
 				case STATE_CONNECTED_MUTE:
 						if(m_module.mute == NO) {
@@ -852,7 +853,7 @@ void system_state_update(uint8_t state)
 								GW_send_cmd_to_3607D(dsp_mute, sizeof(dsp_mute));
 						}
 						m_module.mute = YES;
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_AUDIO_VOLUME_SYNC_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_AUDIO_VOLUME_SYNC_TYPE_BIT_FIELD);
 						break;
 				case STATE_CONNECTED_UNMUTE:
 						if(m_module.mute == YES) {
@@ -860,7 +861,7 @@ void system_state_update(uint8_t state)
 								GW_send_cmd_to_3607D(dsp_unmute, sizeof(dsp_unmute));
 						}
 						m_module.mute = NO;
-						color_update = GW_5G_CCH_init_check(CCH_SYNC_AUDIO_VOLUME_SYNC_TYPE_BIT_FIELD);
+						color_update = GW_host_check(CCH_SYNC_AUDIO_VOLUME_SYNC_TYPE_BIT_FIELD);
 						break;
 				case STATE_PAIR_STANDBY_LED_BREEZE:
 						m_module.standby = STATE_STANDBY_LED_BREEZE;
@@ -949,7 +950,10 @@ void system_state_update(uint8_t state)
 						m_module.fw_upgrade_ats3607 = NO;
 						break;
 				case STATE_FIRMWARE_UPGRADE_MCU_START:
-						GW_led_constant_set(DOA_RGB + FW_FLASH_R);
+						m_module.fw_upgrade_mcu = YES;
+						break;
+				case STATE_FIRMWARE_UPGRADE_MCU_STOP:
+						m_module.fw_upgrade_mcu = NO;
 						break;
 				default:
 						color_update = NO;
@@ -1019,7 +1023,7 @@ void GW_led_color_update(void)
 								}
 						}
 						else {
-								if(m_module.fw_upgrade_aw5808 || m_module.fw_upgrade_ats3607) {
+								if(m_module.fw_upgrade_aw5808 || m_module.fw_upgrade_ats3607 || m_module.fw_upgrade_mcu) {
 										p_side_color = DOA_RGB + FW_FLASH_R;
 										led_mode = LED_STATUS_CONSTANT_MODE;
 										color_state_mode = LED_STATE_FIRMWARE_UPGRADE;
@@ -1100,7 +1104,7 @@ void GW_led_color_update(void)
 				m_led.hz = _hz;
 				m_led.cycle_step = LED_HIGH_LOW_SAMPLE_RATE/m_led.hz;
 				m_led.init = YES;
-				m_led.init_step_ms = hz&LED_COLOR_UPDATE_RATE_MASK? (LED_HIGH_LOW_SAMPLE_PERIOD_MS*_hz): (LED_HIGH_LOW_SAMPLE_PERIOD_MS/_hz);
+				m_led.init_step_ms = led_mode == LED_STATUS_CONSTANT_MODE? 1: hz&LED_COLOR_UPDATE_RATE_MASK? (LED_HIGH_LOW_SAMPLE_PERIOD_MS*_hz): (LED_HIGH_LOW_SAMPLE_PERIOD_MS/_hz);
 				m_led.step_ms = 0;
 
 				m_debug.led_init_time_ms = m_module.current_time_ms;
@@ -1187,6 +1191,8 @@ uint8_t GW_led_manager(void)
 				p_side_color = m_led.side_colors;
 				lde_adjust = YES;
 				m_led.mode = LED_STATUS_CONSTANT_RETAIN_MODE;
+				m_led.step_ms = 100;
+				m_led.second_index = 0;
 		}
 		else if(m_led.mode == LED_STATUS_BLINKY_MODE) {
 				p_side_color = &DOA_RGB[DOA_R_OFF];
@@ -2419,10 +2425,13 @@ void GW_USB_send_to_DSP_slave_vol_request(uint8_t volume)
 
 volatile uint8_t  rx_pair_cch_count = 0;
 
-uint8_t GW_5G_CCH_init_check(uint8_t status)
+uint8_t GW_host_check(uint8_t status)
 {
 		uint8_t init_status = YES;
-		if(m_module.wired_module == NO) {
+		if(m_module.wired_module == YES) {
+				m_module.off_range = m_module.system_state != SYSTEM_STATE_IDLE? NO: YES;
+		}
+		else {
 				m_cch_rx.state_init |= status;
 				if(m_cch_rx.state_init != CCH_SYNC_STATE_INIT_BIT_FIELD) {
 						init_status = NO;
@@ -3669,7 +3678,7 @@ void exec_power_off_mode(void)
 #endif
 
 		m_module.power_on_timeout_ms = 0;
-		if(m_module.power_down != POWER_DOWN_NOW || m_module.power_on_timeout_ms >= 3500)
+		if(m_module.power_down != POWER_DOWN_NOW || m_module.power_on_timeout_ms >= (TIME_S_TO_MS(POWER_DOWN_PRESS_HOLD_TIME_S) + POWER_DOWN_PRESS_HOLD_RESERVE_TIME_MS))
 				return;
 
 		PrintMsg__("Power-down!\r\n");
@@ -3801,7 +3810,7 @@ void GW_pair_init_cb(uint8_t unpair_timeout_clear)
 		m_cch_rx.pair.steps = CCH_PAIR_MODE_CHECK;
 
 		if(unpair_timeout_clear == YES)
-				m_cch_rx.pair.pairing_timeout_ticks_ms = 0;
+				system_unpair_restart();
 	PrintMsg__("Pair init: \r\n");
 }
 
@@ -3964,7 +3973,7 @@ void GW_firware_upgrade_ats3607_cb(uint8_t evt)
 
 void GW_fw_upgrade_mcu(uint8_t evt)
 {
-		system_state_update(STATE_FIRMWARE_UPGRADE_MCU_START);
+		system_state_update(evt? STATE_FIRMWARE_UPGRADE_MCU_START: STATE_FIRMWARE_UPGRADE_MCU_STOP);
 }
 
 void GW_sync_device_type_cb(uint8_t evt)
