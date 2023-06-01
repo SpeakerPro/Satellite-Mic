@@ -75,32 +75,14 @@ void GW_delay1ms(uint32_t ms) {
 }
 
 void GW_GPIO_init(void) {
-	
+
 	CLK_EnableModuleClock(GPA_MODULE);
-	CLK_EnableModuleClock(GPB_MODULE);
 	CLK_EnableModuleClock(GPD_MODULE);	
 
-	GPIO_SetMode(PA, BIT10, GPIO_MODE_INPUT);
-	if(GPO_PA11_DSP_ONOFF == LOW) {
-		GPO_PD02_MCU_PWREN = LOW;
-		GPIO_SetMode(PD, BIT2, GPIO_MODE_OUTPUT);		//MCU_PWREN,					Dock power,		Hi:on		
-		
-		GW_delay1ms(1000);
-		GPO_PD02_MCU_PWREN = HIGH;
-		
-		GW_delay1ms(10);
-		GPO_PA11_DSP_ONOFF = HIGH;
-		GPIO_SetMode(PA, BIT11, GPIO_MODE_OUTPUT);	//DSP_PWREN,					DSP power,		Hi:on		
-		/*
-		GW_delay1ms(50);
-		
-		GPIO_SetMode(PB, BIT12, GPIO_MODE_OUTPUT);	//USBC_UDP_SEL1,			HUB UFP switch to TV or PC
-		GPIO_SetMode(PB, BIT13, GPIO_MODE_OUTPUT);	//USBC_UDP_SEL0,			HUB UFP switch to TV or PC	
-		GPO_PB13_USBC_UDP_SEL0 = 0;
-		GPO_PB12_USBC_UDP_SEL1 = 1;		
-		*/
-	}
+	GPIO_SetMode(PD, BIT2, GPIO_MODE_OUTPUT);		//MCU_PWREN,					Dock power,		Hi:on
+	GPIO_SetMode(PA, BIT10, GPIO_MODE_INPUT);		//GPO_PA10_TYPEC1_SW		0: Wireless; 1: Wired
 
+	GPO_PD02_MCU_PWREN = HIGH;
 }
 
 uint32_t APROM_checksum = 0x00, APROM_cal_checksum = 0x00, config0 = 0x00;

@@ -12,7 +12,7 @@
 #define use_middle_pair
 
 #define VERSION_MAJOR_ID              0x00
-#define VERSION_MINOR_ID              0x80
+#define VERSION_MINOR_ID              0x82
 
 // USB definition
 #define WIRE_USBD_PID                 0xA064
